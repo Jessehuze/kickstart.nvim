@@ -148,7 +148,16 @@ vim.o.splitbelow = true
 --   See `:help lua-options`
 --   and `:help lua-guide-options`
 vim.o.list = true
+vim.o.winbar = '%f'
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+
+-- Automatically reload files changed outside of Neovim
+vim.o.autoread = true
+vim.api.nvim_create_autocmd({ 'FocusGained', 'BufEnter', 'CursorHold', 'CursorHoldI' }, {
+  callback = function()
+    if vim.fn.mode() ~= 'c' then vim.cmd 'checktime' end
+  end,
+})
 
 -- Preview substitutions live, as you type!
 vim.o.inccommand = 'split'
@@ -207,6 +216,29 @@ vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' }
 --  Use CTRL+<hjkl> to switch between windows
 --
 --  See `:help wincmd` for a list of all window commands
+-- Copy a file:line or file:start-end reference to the system clipboard.
+--   Normal mode: <leader>yr  →  path/to/file.lua:42
+--   Visual mode: <leader>yr  →  path/to/file.lua:10-25
+local function yank_ref(mode)
+  local path = vim.fn.expand '%:p'
+  local ref
+  if mode == 'v' then
+    local start_line = vim.fn.line 'v'
+    local end_line = vim.fn.line '.'
+    if start_line > end_line then
+      start_line, end_line = end_line, start_line
+    end
+    ref = start_line == end_line and (path .. ':' .. start_line) or (path .. ':' .. start_line .. '-' .. end_line)
+  else
+    ref = path .. ':' .. vim.fn.line '.'
+  end
+  vim.fn.setreg('+', ref)
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+  vim.notify('Copied: ' .. ref)
+end
+vim.keymap.set('n', '<leader>yr', function() yank_ref 'n' end, { desc = '[Y]ank file [R]eference (line)' })
+vim.keymap.set('v', '<leader>yr', function() yank_ref 'v' end, { desc = '[Y]ank file [R]eference (range)' })
+
 vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
@@ -614,6 +646,8 @@ require('lazy').setup({
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         -- ts_ls = {},
 
+        intelephense = {},
+
         stylua = {}, -- Used to format Lua code
 
         -- Special Lua Config, as recommended by neovim help docs
@@ -913,17 +947,17 @@ require('lazy').setup({
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
   -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!

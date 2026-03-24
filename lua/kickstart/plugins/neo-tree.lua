@@ -19,9 +19,17 @@ return {
   ---@type neotree.Config
   opts = {
     filesystem = {
+      filtered_items = {
+        visible = true,
+      },
       window = {
         mappings = {
           ['\\'] = 'close_window',
+          ['Y'] = function(state)
+            local node = state.tree:get_node()
+            vim.fn.setreg('+', node.path)
+            vim.api.nvim_echo({ { 'Copied full path: ' .. vim.fn.fnamemodify(node.path, ':t') } }, false, {})
+          end,
         },
       },
     },

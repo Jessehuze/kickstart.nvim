@@ -5,4 +5,14 @@
 
 ---@module 'lazy'
 ---@type LazySpec
-return {}
+return {
+  {
+    'sindrets/diffview.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    keys = {
+      { '<leader>gd', '<cmd>DiffviewOpen<CR>', desc = '[G]it [D]iff view' },
+      { '<leader>gh', '<cmd>DiffviewFileHistory %<CR>', desc = '[G]it file [H]istory' },
+      { '<leader>gx', '<cmd>DiffviewClose<CR>', desc = '[G]it diff close' },
+    },
+  },
+}
